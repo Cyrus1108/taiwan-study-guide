@@ -238,6 +238,9 @@ table.dt{width:100%;border-collapse:collapse;font-size:14px}
 table.dt td{padding:8px 0;border-bottom:1px solid var(--border);vertical-align:top}
 table.dt td:last-child{text-align:right;white-space:nowrap;color:var(--muted);padding-left:12px}
 table.dt tr.sum td{font-weight:700;color:var(--text);border-bottom:0;border-top:1px solid var(--border-strong)}
+.detail[data-plan]{display:none}
+.detail[data-plan].on{display:block}
+@media print{.detail[data-plan]{display:block!important}}
 .living{font-size:14px;color:var(--text);background:var(--surface-2);border-radius:11px;padding:12px 14px;margin:6px 0}
 .living .sm{display:block;font-size:12px;color:var(--muted);margin-top:5px}
 
@@ -416,11 +419,11 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);
       <p class="basis">生活费以每学期约 5 个月计（海青班 4 学期＝20 个月，大学 8 学期＝40 个月）；寒暑假留台期间的生活费未计入。</p>
     </div>
 
-    <!-- Static detail (Plan A) -->
-    <div class="detail">
-      <p class="cap">以下为静态明细，以方案 A（静宜）为例，不随上方切换变化。</p>
+    <!-- Per-plan detail (follows the selector above) -->
+    <p class="cap" style="margin-top:20px">明细随上方选择的方案变化；③ 一次性开销各方案相同。</p>
 
-      <div class="dh">① 交给学校（每学期）</div>
+    <div class="detail on" data-plan="A">
+      <div class="dh">① 交给学校（每学期）· 方案 A 静宜海青班</div>
       <table class="dt">
         <tr><td>宿舍（4 人房，含水电网络）</td><td>11,000–15,000</td></tr>
         <tr><td>实习材料费（化妆品耗材）</td><td>约 13,000</td></tr>
@@ -430,13 +433,62 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);
         <tr class="sum"><td>每学期小计</td><td>约 3.3–3.9 万</td></tr>
         <tr class="sum"><td>4 学期合计</td><td>约 13.2–15.6 万</td></tr>
       </table>
-
       <div class="dh">② 生活费（每月，不含住宿）</div>
       <div class="living">伙食约 6,000 ／ 交通月票 299（台中，需绑市民卡）／ 手机与日用约 1,500 → 每月约 7,800 × 20 个月（每学期约 5 个月 × 4 学期）＝ 15.6 万
         <span class="sm">注：寒暑假留台期间的生活费未计入。</span>
       </div>
+    </div>
 
-      <div class="dh">③ 一次性（入学前后一次）</div>
+    <div class="detail" data-plan="B">
+      <div class="dh">① 交给学校（每学期）· 方案 B 文化海青班</div>
+      <table class="dt">
+        <tr><td>宿舍（4–6 人房，含水电不含冷气）</td><td>12,375–17,250</td></tr>
+        <tr><td>实习材料费（烘焙/烹饪耗材）</td><td>约 13,000</td></tr>
+        <tr><td>书籍费</td><td>约 3,500</td></tr>
+        <tr><td>健保（有清寒证明减半）</td><td>2,478–4,956</td></tr>
+        <tr><td>杂费 + 课外活动费</td><td>2,825</td></tr>
+        <tr class="sum"><td>每学期小计</td><td>约 3.4–4.2 万</td></tr>
+        <tr class="sum"><td>4 学期合计</td><td>约 13.6–16.6 万</td></tr>
+      </table>
+      <div class="dh">② 生活费（每月，不含住宿）</div>
+      <div class="living">伙食约 7,000 ／ 交通月票 1,200（台北 TPASS）／ 手机与日用约 1,500 → 每月约 9,700 × 20 个月（每学期约 5 个月 × 4 学期）＝ 19.4 万
+        <span class="sm">注：寒暑假留台期间的生活费未计入。</span>
+      </div>
+    </div>
+
+    <div class="detail" data-plan="C">
+      <div class="dh">① 交给学校（每学期）· 方案 C 树德大学·侨生</div>
+      <table class="dt">
+        <tr><td>学杂费（视成绩减免而定；第一学期为 26,700）</td><td>26,700–53,390</td></tr>
+        <tr><td>宿舍（私立典型区间，⚠️ 树德官网待核）</td><td>约 13,900–18,500</td></tr>
+        <tr class="sum"><td>每学期小计</td><td>约 4.1–7.2 万</td></tr>
+        <tr class="sum"><td>8 学期合计</td><td>约 32.5–57.5 万</td></tr>
+      </table>
+      <p class="cap">注：健保约 2,478–4,956/学期另计，未含于上表与合计。</p>
+      <div class="dh">② 生活费（每月，不含住宿）</div>
+      <div class="living">伙食约 6,000 ／ 交通月票 399（高雄 MeNGo）／ 手机与日用约 1,500 → 每月约 7,900 × 40 个月（每学期约 5 个月 × 8 学期）＝ 31.6 万
+        <span class="sm">注：寒暑假留台期间的生活费未计入。</span>
+      </div>
+    </div>
+
+    <div class="detail" data-plan="D">
+      <div class="dh">① 交给学校（每学期）· 方案 D 高餐大学·侨生</div>
+      <table class="dt">
+        <tr><td>学杂费（侨生比照本地生）</td><td>22,814–28,390</td></tr>
+        <tr><td>教学食材费（烘焙管理系）</td><td>9,000</td></tr>
+        <tr><td>宿舍</td><td>11,500</td></tr>
+        <tr class="sum"><td>每学期小计</td><td>约 4.3–4.9 万</td></tr>
+        <tr class="sum"><td>8 学期合计</td><td>约 34.6–39.1 万</td></tr>
+      </table>
+      <p class="cap">注：健保约 2,478–4,956/学期另计，未含于上表与合计。</p>
+      <div class="dh">② 生活费（每月，不含住宿）</div>
+      <div class="living">伙食约 6,000 ／ 交通月票 399（高雄 MeNGo）／ 手机与日用约 1,500 → 每月约 7,900 × 40 个月（每学期约 5 个月 × 8 学期）＝ 31.6 万
+        <span class="sm">注：寒暑假留台期间的生活费未计入。</span>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div class="dh">③ 一次性（入学前后一次，各方案相同）</div>
       <table class="dt">
         <tr><td>机票（KUL→台湾单程）</td><td>约 4,000–6,000</td></tr>
         <tr><td>体检（马来西亚做，录取后 3 个月内有效）</td><td>约 2,000–2,500</td></tr>
@@ -773,6 +825,11 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);
     for(var i=0;i<labels.length;i++){
       var on = labels[i].getAttribute("data-k") === key;
       labels[i].classList.toggle("active", on);
+    }
+    // per-plan detail blocks follow the selection
+    var dets = document.querySelectorAll(".detail[data-plan]");
+    for(var j=0;j<dets.length;j++){
+      dets[j].classList.toggle("on", dets[j].getAttribute("data-plan") === key);
     }
   }
 
