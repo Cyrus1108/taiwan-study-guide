@@ -241,6 +241,14 @@ table.dt tr.sum td{font-weight:700;color:var(--text);border-bottom:0;border-top:
 .detail[data-plan]{display:none}
 .detail[data-plan].on{display:block}
 @media print{.detail[data-plan]{display:block!important}}
+.curseg{display:flex;gap:6px}
+.curseg button{
+  font:inherit;font-size:13px;font-weight:600;color:var(--muted);
+  background:var(--surface-2);border:1px solid var(--border-strong);border-radius:999px;
+  padding:7px 14px;min-height:36px;cursor:pointer;
+}
+.curseg button.active{background:var(--teal-tint);color:var(--teal);border-color:var(--teal)}
+.dh .unit{font-weight:400;font-size:12px;color:var(--faint);margin-left:6px}
 .living{font-size:14px;color:var(--text);background:var(--surface-2);border-radius:11px;padding:12px 14px;margin:6px 0}
 .living .sm{display:block;font-size:12px;color:var(--muted);margin-top:5px}
 
@@ -408,6 +416,13 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);
       <div class="wk no-print">
         <span class="wl">打工抵生活费<small>时薪 196 × 每周上限 20 小时 ≈ 月收上限约 16,800（需办工作许可证）</small></span>
         <label class="toggle"><input type="checkbox" id="work"><span class="track"><span class="thumb"></span></span></label>
+      </div>
+      <div class="wk no-print">
+        <span class="wl">显示货币<small>RM 按 NT$1 ≈ RM 0.137 换算；打工时薪一行维持台币</small></span>
+        <div class="curseg" id="cur">
+          <button type="button" data-c="NT" class="active">NT$</button>
+          <button type="button" data-c="RM">RM</button>
+        </div>
       </div>
       <div class="out">
         <div class="ol">需准备的金额（合计）</div>
@@ -811,12 +826,19 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);
     return r ? r.value : "A";
   }
 
+  var CUR = "NT"; // 显示货币：NT 或 RM
+
   function render(){
     var key = currentKey();
     var w = work.checked;
     var r = compute(key, w);
-    outNT.innerHTML = "NT$ " + wan(r.min) + "&ndash;" + wan(r.max) + ' <span class="u">万</span>';
-    outRM.innerHTML = "RM " + wan(r.min*RATE) + "&ndash;" + wan(r.max*RATE) + ' <span class="u">万</span>';
+    if(CUR === "RM"){
+      outNT.innerHTML = "RM " + wan(r.min*RATE) + "&ndash;" + wan(r.max*RATE) + ' <span class="u">万</span>';
+      outRM.innerHTML = "NT$ " + wan(r.min) + "&ndash;" + wan(r.max) + ' <span class="u">万</span>';
+    } else {
+      outNT.innerHTML = "NT$ " + wan(r.min) + "&ndash;" + wan(r.max) + ' <span class="u">万</span>';
+      outRM.innerHTML = "RM " + wan(r.min*RATE) + "&ndash;" + wan(r.max*RATE) + ' <span class="u">万</span>';
+    }
     outAs.textContent = "假设：" + r.p.name + " · " + r.p.terms + " 学期（生活费月数 " + r.p.months + "）· " + (w ? "打工（收入抵生活费，盈余不计）" : "不打工");
     if(r.p.note){ outNote.textContent = "⚠️ " + r.p.note; outNote.hidden = false; }
     else { outNote.hidden = true; }
@@ -836,6 +858,68 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);
   seg.addEventListener("change", render);
   work.addEventListener("change", render);
   render();
+
+  /* ---- Currency toggle: convert budget detail tables & living blocks ---- */
+  // 换算规则：RM = NT × 0.137；≥ RM 1 万显示「X.X 万」，其余取整加千分位。
+  // 仅换算预算区明细（.detail 内的表格与生活费行）；时薪一行维持台币。
+  function fmtRM(nt){
+    var rm = nt * RATE;
+    if(rm >= 10000) return (rm/10000).toFixed(1) + " 万";
+    return Math.round(rm).toLocaleString("en-US");
+  }
+  function convertText(html, aggressive){
+    // 单趟替换，避免换算结果被再次当作台币二次换算；「X–Y 万」区间两端都换。
+    var pattern = aggressive
+      ? /(\d+(?:\.\d+)?)(?:\s*–\s*(\d+(?:\.\d+)?))?\s*万|(\d{1,3}(?:,\d{3})+)(?:\s*–\s*(\d{1,3}(?:,\d{3})+))?|(月票\s*)(\d{3})\b|(^|[（(\s>])(\d{3,4})(?=[）)\s<，。；]|$)/g
+      : /(\d+(?:\.\d+)?)(?:\s*–\s*(\d+(?:\.\d+)?))?\s*万|(\d{1,3}(?:,\d{3})+)(?:\s*–\s*(\d{1,3}(?:,\d{3})+))?|(月票\s*)(\d{3})\b/g;
+    return html.replace(pattern, function(m, w1, w2, c1, c2, yl, yn, bp, bn){
+      if(w1 !== undefined){
+        var a = fmtRM(parseFloat(w1)*10000);
+        return (w2 !== undefined) ? a + "–" + fmtRM(parseFloat(w2)*10000) : a;
+      }
+      if(c1 !== undefined){
+        var x = fmtRM(parseInt(c1.replace(/,/g,""),10));
+        return (c2 !== undefined) ? x + "–" + fmtRM(parseInt(c2.replace(/,/g,""),10)) : x;
+      }
+      if(yn !== undefined) return yl + fmtRM(parseInt(yn,10));
+      if(bn !== undefined) return (bp || "") + fmtRM(parseInt(bn,10));
+      return m;
+    });
+  }
+  var moneyNodes = null;
+  function collectMoneyNodes(){
+    moneyNodes = [];
+    var cells = document.querySelectorAll(".detail table.dt td");
+    for(var i=0;i<cells.length;i++){
+      moneyNodes.push({el:cells[i], orig:cells[i].innerHTML, agg:(cells[i] === cells[i].parentNode.lastElementChild)});
+    }
+    var livings = document.querySelectorAll(".detail .living");
+    for(var k=0;k<livings.length;k++){ moneyNodes.push({el:livings[k], orig:livings[k].innerHTML, agg:false}); }
+  }
+  function applyCurrency(){
+    if(!moneyNodes) collectMoneyNodes();
+    for(var i=0;i<moneyNodes.length;i++){
+      var n = moneyNodes[i];
+      n.el.innerHTML = (CUR === "RM") ? convertText(n.orig, n.agg) : n.orig;
+    }
+    var dhs = document.querySelectorAll(".detail .dh");
+    for(var j=0;j<dhs.length;j++){
+      var u = dhs[j].querySelector(".unit");
+      if(!u){ u = document.createElement("span"); u.className = "unit"; dhs[j].appendChild(u); }
+      u.textContent = (CUR === "RM") ? "（单位：马币 RM）" : "（单位：新台币 NT$）";
+    }
+  }
+  var cur = document.getElementById("cur");
+  cur.addEventListener("click", function(e){
+    var b = e.target.closest("button");
+    if(!b) return;
+    CUR = b.getAttribute("data-c");
+    var bs = cur.querySelectorAll("button");
+    for(var i=0;i<bs.length;i++){ bs[i].classList.toggle("active", bs[i] === b); }
+    applyCurrency();
+    render();
+  });
+  applyCurrency();
 
   /* ---- Timeline current-stage highlight ---- */
   (function(){
